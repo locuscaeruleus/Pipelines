@@ -299,7 +299,7 @@ get_options()
 		log_Msg "highpass value: ${p_HighPass}"
 	fi
 
-	if [ -z "{p_MyelineTargetFile}" ]; then
+	if [ -z "${p_MyelinTargetFile}" ]; then
 		log_Err "Myelin Target File (--myelin-target-file=) required"
 		error_count=$(( error_count + 1 ))
 	else
@@ -762,71 +762,7 @@ main()
 			log_Msg "Hemisphere: ${Hemisphere}"
 			log_Msg "Structure: ${Structure}"
 
-			# ${Caret7_Command} -metric-resample \
-			# 				  ${ResultsFolder}/${fMRIName}/${fMRIName}.${Hemisphere}.native.func.gii \
-			# 				  ${NativeFolder}/${Subject}.${Hemisphere}.sphere.${ConcatRegName}.native.surf.gii \
-			# 				  ${DownSampleFolder}/${Subject}.${Hemisphere}.sphere.${LowResMesh}k_fs_LR.surf.gii \
-			# 				  ADAP_BARY_AREA \
-			# 				  ${ResultsFolder}/${fMRIName}/${fMRIName}_${ConcatRegName}.${Hemisphere}.atlasroi.${LowResMesh}k_fs_LR.func.gii \
-			# 				  -area-surfs \
-			# 				  ${NativeT1wFolder}/${Subject}.${Hemisphere}.midthickness.native.surf.gii \
-			# 				  ${DownSampleT1wFolder}/${Subject}.${Hemisphere}.midthickness_${ConcatRegName}.${LowResMesh}k_fs_LR.surf.gii \
-			# 				  -current-roi \
-			# 				  ${NativeFolder}/${Subject}.${Hemisphere}.roi.native.shape.gii
-
-			# the metric file to resample
-			metric_in=${ResultsFolder}/${fMRIName}/${fMRIName}.${Hemisphere}.native.func.gii
-			# a sphere surface with the mesh that the metric is currently on
-			current_sphere=${NativeFolder}/${Subject}.${Hemisphere}.sphere.${ConcatRegName}.native.surf.gii
-			# a sphere surface that is in register with current_sphere and has the desired output mesh
-			new_sphere=${DownSampleFolder}/${Subject}.${Hemisphere}.sphere.${LowResMesh}k_fs_LR.surf.gii
-			# the output metric
-			metric_out=${ResultsFolder}/${fMRIName}/${fMRIName}_${ConcatRegName}.${Hemisphere}.atlasroi.${LowResMesh}k_fs_LR.func.gii
-
-			# a relevant anatomical surface with current_sphere mesh
-			current_area=${NativeT1wFolder}/${Subject}.${Hemisphere}.midthickness.native.surf.gii
-			# a relevant anatomical surface with new_sphere mesh
-			new_area=${DownSampleT1wFolder}/${Subject}.${Hemisphere}.midthickness_${ConcatRegName}.${LowResMesh}k_fs_LR.surf.gii
-
-			# input roi on the current mesh to exclude non-data vertices
-			roi_metric=${NativeFolder}/${Subject}.${Hemisphere}.roi.native.shape.gii
-
-			if [ ! -e ${metric_in} ] ; then
-				log_Msg "metric_in: ${metric_in} - DOES NOT EXIST"
-			fi
-
-			if [ ! -e ${current_sphere} ] ; then
-				log_Msg "current_sphere: ${current_sphere} - DOES NOT EXIST"
-			fi
-
-			if [ ! -e ${new_sphere} ] ; then
-				log_Msg "new_sphere: ${new_sphere} - DOES NOT EXIST"
-			fi
-
-			if [ ! -e ${current_area} ] ; then
-				log_Msg "current_area: ${current_area} - DOES NOT EXIST"
-			fi
-
-			if [ ! -e ${new_area} ] ; then
-				log_Msg "new_area: ${new_area} - DOES NOT EXIST"
-			fi
-			
-			if [ ! -e ${roi_metric} ] ; then
-				log_Msg "roi_metric: ${roi_metric} - DOES NOT EXIST"
-			fi
-			
-			${Caret7_Command} -metric-resample \
-							  ${metric_in} \
-							  ${current_sphere} \
-							  ${new_sphere} \
-							  ADAP_BARY_AREA \
-							  ${metric_out} \
-							  -area-surfs \
-							  ${current_area} \
-							  ${new_area} \
-							  -current-roi \
-							  ${roi_metric}
-				
+			${Caret7_Command} -metric-resample ${ResultsFolder}/${fMRIName}/${fMRIName}.${Hemisphere}.native.func.gii ${NativeFolder}/${Subject}.${Hemisphere}.sphere.${ConcatRegName}.native.surf.gii ${DownSampleFolder}/${Subject}.${Hemisphere}.sphere.${LowResMesh}k_fs_LR.surf.gii ADAP_BARY_AREA ${ResultsFolder}/${fMRIName}/${fMRIName}_${ConcatRegName}.${Hemisphere}.atlasroi.${LowResMesh}k_fs_LR.func.gii -area-surfs ${NativeT1wFolder}/${Subject}.${Hemisphere}.midthickness.native.surf.gii ${DownSampleT1wFolder}/${Subject}.${Hemisphere}.midthickness_${ConcatRegName}.${LowResMesh}k_fs_LR.surf.gii -current-roi ${NativeFolder}/${Subject}.${Hemisphere}.roi.native.shape.gii
 			${Caret7_Command} -metric-dilate ${ResultsFolder}/${fMRIName}/${fMRIName}_${ConcatRegName}.${Hemisphere}.atlasroi.${LowResMesh}k_fs_LR.func.gii ${DownSampleT1wFolder}/${Subject}.${Hemisphere}.midthickness_${ConcatRegName}.${LowResMesh}k_fs_LR.surf.gii 30 ${ResultsFolder}/${fMRIName}/${fMRIName}_${ConcatRegName}.${Hemisphere}.atlasroi.${LowResMesh}k_fs_LR.func.gii -nearest
 			${Caret7_Command} -metric-mask ${ResultsFolder}/${fMRIName}/${fMRIName}_${ConcatRegName}.${Hemisphere}.atlasroi.${LowResMesh}k_fs_LR.func.gii ${DownSampleFolder}/${Subject}.${Hemisphere}.atlasroi.${LowResMesh}k_fs_LR.shape.gii ${ResultsFolder}/${fMRIName}/${fMRIName}_${ConcatRegName}.${Hemisphere}.atlasroi.${LowResMesh}k_fs_LR.func.gii
 			Sigma=`echo "$SmoothingFWHM / ( 2 * ( sqrt ( 2 * l ( 2 ) ) ) )" | bc -l`
@@ -837,9 +773,12 @@ main()
 
 	# ReApply FIX Cleanup
 	log_Msg "ReApply FIX Cleanup"
+	log_Msg "rfMRINames: ${rfMRINames}"
 	for fMRIName in ${rfMRINames} ; do
 		log_Msg "fMRIName: ${fMRIName}"
-		${HCPPIPEDIR}/ReApplyFix/ReApplyFixPipeline.sh --path=${StudyFolder} --subject=${Subject} --fmri-name=${fMRIName} --high-pass=${HighPass} --reg-name=${ConcatRegName} --matlab-run-mode=${MatlabRunMode}
+		reapply_fix_cmd="${HCPPIPEDIR}/ReApplyFix/ReApplyFixPipeline.sh --path=${StudyFolder} --subject=${Subject} --fmri-name=${fMRIName} --high-pass=${HighPass} --reg-name=${ConcatRegName} --matlab-run-mode=${MatlabRunMode}"
+		log_Msg "reapply_fix_cmd: ${reapply_fix_cmd}"
+		${reapply_fix_cmd}
 	done
 	
 	log_Msg "Completing main functionality"
